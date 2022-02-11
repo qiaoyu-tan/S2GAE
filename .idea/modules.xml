@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/MGAE.iml" filepath="$PROJECT_DIR$/.idea/MGAE.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../PS2/.idea/PS2.iml" filepath="$PROJECT_DIR$/../PS2/.idea/PS2.iml" />
     </modules>
   </component>
 </project>
