@@ -1,0 +1,15 @@
+
+numpy==1.20.1
+pandas==1.2.3
+scikit-learn==0.23.2
+scipy==1.5.3
+sklearn==0.0
+torch==1.7.1+cu110
+torch-cluster==1.5.9
+torch-geometric==1.7.1
+torch-scatter==2.0.7
+torch-sparse==0.6.10
+torch-spline-conv==1.2.1
+torchaudio==0.7.2
+torchvision==0.8.2+cu110
+
