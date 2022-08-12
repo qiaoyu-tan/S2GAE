@@ -1,7 +1,8 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
-
+from torch_sparse import SparseTensor
+from torch_geometric.utils import to_undirected
 import sys
 import math
 from tqdm import tqdm
@@ -326,52 +327,6 @@ def do_edge_split(dataset, fast_split=False, val_ratio=0.05, test_ratio=0.1):
 
 
 def do_edge_split_direct(dataset, fast_split=False, val_ratio=0.05, test_ratio=0.1):
-    data = dataset[0]
-    random.seed(234)
-    torch.manual_seed(234)
-
-    if not fast_split:
-        data = train_test_split_edges_direct(data, val_ratio, test_ratio)
-        edge_index, _ = add_self_loops(data.train_pos_edge_index)
-        data.train_neg_edge_index = negative_sampling(
-            edge_index, num_nodes=data.num_nodes,
-            num_neg_samples=data.train_pos_edge_index.size(1))
-    else:
-        num_nodes = data.num_nodes
-        row, col = data.edge_index
-        # Return upper triangular portion.
-        mask = row < col
-        row, col = row[mask], col[mask]
-        n_v = int(math.floor(val_ratio * row.size(0)))
-        n_t = int(math.floor(test_ratio * row.size(0)))
-        # Positive edges.
-        perm = torch.randperm(row.size(0))
-        row, col = row[perm], col[perm]
-        r, c = row[:n_v], col[:n_v]
-        data.val_pos_edge_index = torch.stack([r, c], dim=0)
-        r, c = row[n_v:n_v + n_t], col[n_v:n_v + n_t]
-        data.test_pos_edge_index = torch.stack([r, c], dim=0)
-        r, c = row[n_v + n_t:], col[n_v + n_t:]
-        data.train_pos_edge_index = torch.stack([r, c], dim=0)
-        # Negative edges (cannot guarantee (i,j) and (j,i) won't both appear)
-        neg_edge_index = negative_sampling(
-            data.edge_index, num_nodes=num_nodes,
-            num_neg_samples=row.size(0))
-        data.val_neg_edge_index = neg_edge_index[:, :n_v]
-        data.test_neg_edge_index = neg_edge_index[:, n_v:n_v + n_t]
-        data.train_neg_edge_index = neg_edge_index[:, n_v + n_t:]
-
-    split_edge = {'train': {}, 'valid': {}, 'test': {}}
-    split_edge['train']['edge'] = data.train_pos_edge_index.t()
-    split_edge['train']['edge_neg'] = data.train_neg_edge_index.t()
-    split_edge['valid']['edge'] = data.val_pos_edge_index.t()
-    split_edge['valid']['edge_neg'] = data.val_neg_edge_index.t()
-    split_edge['test']['edge'] = data.test_pos_edge_index.t()
-    split_edge['test']['edge_neg'] = data.test_neg_edge_index.t()
-    return split_edge
-
-
-def do_edge_split_social_direct(dataset, fast_split=False, val_ratio=0.05, test_ratio=0.1):
     data = dataset.clone()
     random.seed(234)
     torch.manual_seed(234)
@@ -415,6 +370,36 @@ def do_edge_split_social_direct(dataset, fast_split=False, val_ratio=0.05, test_
     split_edge['test']['edge'] = data.test_pos_edge_index.t()
     split_edge['test']['edge_neg'] = data.test_neg_edge_index.t()
     return split_edge
+
+
+def do_edge_split_nc(edge_index, num_nodes, val_ratio=0.05, test_ratio=0.1):
+    random.seed(234)
+    torch.manual_seed(234)
+
+    row, col = edge_index
+    # Return upper triangular portion.
+    mask = row < col
+    row, col = row[mask], col[mask]
+    n_v = int(math.floor(val_ratio * row.size(0)))
+    n_t = int(math.floor(test_ratio * row.size(0)))
+    # Positive edges.
+    perm = torch.randperm(row.size(0))
+    row, col = row[perm], col[perm]
+    r, c = row[:n_v], col[:n_v]
+    val_pos_edge_index = torch.stack([r, c], dim=0)
+    r, c = row[n_v:n_v + n_t], col[n_v:n_v + n_t]
+    test_pos_edge_index = torch.stack([r, c], dim=0)
+    r, c = row[n_v + n_t:], col[n_v + n_t:]
+    train_pos_edge_index = torch.stack([r, c], dim=0)
+    # Negative edges (cannot guarantee (i,j) and (j,i) won't both appear)
+    neg_edge_index = negative_sampling(
+        edge_index, num_nodes=num_nodes,
+        num_neg_samples=row.size(0))
+    test_neg_edge_index = neg_edge_index[:, n_v:n_v + n_t]
+
+    train_pos_edge = torch.cat([train_pos_edge_index, val_pos_edge_index], dim=1)
+
+    return train_pos_edge.t(), test_pos_edge_index.t(), test_neg_edge_index.t()
 
 
 def get_pos_neg_edges(split, split_edge, edge_index, num_nodes, percent=100):
@@ -487,39 +472,30 @@ def AA(A, edge_index, batch_size=100000):
     return torch.FloatTensor(scores), edge_index
 
 
-def PPR(A, edge_index):
-    # The Personalized PageRank heuristic score.
-    # Need install fast_pagerank by "pip install fast-pagerank"
-    # Too slow for large datasets now.
-    from fast_pagerank import pagerank_power
-    num_nodes = A.shape[0]
-    src_index, sort_indices = torch.sort(edge_index[0])
-    dst_index = edge_index[1, sort_indices]
-    edge_index = torch.stack([src_index, dst_index])
-    #edge_index = edge_index[:, :50]
-    scores = []
-    visited = set([])
-    j = 0
-    for i in tqdm(range(edge_index.shape[1])):
-        if i < j:
-            continue
-        src = edge_index[0, i]
-        personalize = np.zeros(num_nodes)
-        personalize[src] = 1
-        ppr = pagerank_power(A, p=0.85, personalize=personalize, tol=1e-7)
-        j = i
-        while edge_index[0, j] == src:
-            j += 1
-            if j == edge_index.shape[1]:
-                break
-        all_dst = edge_index[1, i:j]
-        cur_scores = ppr[all_dst]
-        if cur_scores.ndim == 0:
-            cur_scores = np.expand_dims(cur_scores, 0)
-        scores.append(np.array(cur_scores))
+def load_social_graphs(dataset_str="BlogCatalog"):
+    data_file = 'dataset/{}/{}'.format(dataset_str, dataset_str) + '.mat'
+    data = scio.loadmat(data_file)
+    features = data['Attributes']
+    labels = data['Label'].reshape(-1)
+    adj = data['Network']
 
-    scores = np.concatenate(scores, 0)
-    return torch.FloatTensor(scores), edge_index
+    label_min = np.min(labels)
+    if label_min != 0:
+        labels = labels - 1
+
+    adj = adj - ssp.dia_matrix((adj.diagonal()[np.newaxis, :], [0]), shape=adj.shape)
+    adj.eliminate_zeros()
+
+    adj = adj.tocoo()
+    edge_index = np.vstack((adj.row, adj.col)).transpose()
+
+    x = torch.from_numpy(features.todense()).to(torch.float)
+
+    edge_index = torch.from_numpy(edge_index).t().to(torch.long).contiguous()
+    y = torch.from_numpy(labels).to(torch.float)
+
+    dataset = Data(x=x, edge_index=edge_index, y=y)
+    return dataset
 
 
 class Logger(object):
@@ -675,28 +651,42 @@ def sparse_to_tuple(sparse_mx):
     return coords, values, shape
 
 
-def load_social_graphs(dataset_str="BlogCatalog"):
-    data_file = 'dataset/{}/{}'.format(dataset_str, dataset_str) + '.mat'
-    data = scio.loadmat(data_file)
-    features = data['Attributes']
-    labels = data['Label'].reshape(-1)
-    adj = data['Network']
+def edgemask_um(mask_ratio, split_edge, device, num_nodes):
+    if isinstance(split_edge, torch.Tensor):
+        edge_index = split_edge
+    else:
+        edge_index = split_edge['train']['edge']
+    num_edge = len(edge_index)
+    index = np.arange(num_edge)
+    np.random.shuffle(index)
+    mask_num = int(num_edge * mask_ratio)
+    pre_index = torch.from_numpy(index[0:-mask_num])
+    mask_index = torch.from_numpy(index[-mask_num:])
+    edge_index_train = edge_index[pre_index].t()
+    edge_index_mask = edge_index[mask_index].t()
+    edge_index = to_undirected(edge_index_train)
+    edge_index, _ = add_self_loops(edge_index, num_nodes=num_nodes)
+    adj = SparseTensor.from_edge_index(edge_index).t()
+    return adj, edge_index, edge_index_mask.to(device)
 
-    label_min = np.min(labels)
-    if label_min != 0:
-        labels = labels - 1
 
-    adj = adj - ssp.dia_matrix((adj.diagonal()[np.newaxis, :], [0]), shape=adj.shape)
-    adj.eliminate_zeros()
+def edgemask_dm(mask_ratio, split_edge, device, num_nodes):
+    if isinstance(split_edge, torch.Tensor):
+        edge_index = to_undirected(split_edge.t()).t()
+    else:
+        edge_index = torch.stack([split_edge['train']['edge'][:, 1], split_edge['train']['edge'][:, 0]], dim=1)
+        edge_index = torch.cat([split_edge['train']['edge'], edge_index], dim=0)
 
-    adj = adj.tocoo()
-    edge_index = np.vstack((adj.row, adj.col)).transpose()
+    num_edge = len(edge_index)
+    index = np.arange(num_edge)
+    np.random.shuffle(index)
+    mask_num = int(num_edge * mask_ratio)
+    pre_index = torch.from_numpy(index[0:-mask_num])
+    mask_index = torch.from_numpy(index[-mask_num:])
+    edge_index_train = edge_index[pre_index].t()
+    edge_index_mask = edge_index[mask_index].to(device)
 
-    x = torch.from_numpy(features.todense()).to(torch.float)
-
-    edge_index = torch.from_numpy(edge_index).t().to(torch.long).contiguous()
-    y = torch.from_numpy(labels).to(torch.float)
-
-    dataset = Data(x=x, edge_index=edge_index, y=y)
-    return dataset
-
+    edge_index = edge_index_train
+    edge_index, _ = add_self_loops(edge_index, num_nodes=num_nodes)
+    adj = SparseTensor.from_edge_index(edge_index).t()
+    return adj, edge_index, edge_index_mask.to(device)

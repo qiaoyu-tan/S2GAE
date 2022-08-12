@@ -4,7 +4,7 @@
     <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoredPackages">
         <value>
-          <list size="64">
+          <list size="121">
             <item index="0" class="java.lang.String" itemvalue="torch-scatter" />
             <item index="1" class="java.lang.String" itemvalue="torch-cluster" />
             <item index="2" class="java.lang.String" itemvalue="torch-sparse" />
@@ -69,6 +69,63 @@
             <item index="61" class="java.lang.String" itemvalue="urllib3" />
             <item index="62" class="java.lang.String" itemvalue="Jinja2" />
             <item index="63" class="java.lang.String" itemvalue="torchaudio" />
+            <item index="64" class="java.lang.String" itemvalue="gensim" />
+            <item index="65" class="java.lang.String" itemvalue="cmaes" />
+            <item index="66" class="java.lang.String" itemvalue="greenlet" />
+            <item index="67" class="java.lang.String" itemvalue="colorlog" />
+            <item index="68" class="java.lang.String" itemvalue="huggingface-hub" />
+            <item index="69" class="java.lang.String" itemvalue="ml-collections" />
+            <item index="70" class="java.lang.String" itemvalue="mkl-random" />
+            <item index="71" class="java.lang.String" itemvalue="fsspec" />
+            <item index="72" class="java.lang.String" itemvalue="filelock" />
+            <item index="73" class="java.lang.String" itemvalue="contextlib2" />
+            <item index="74" class="java.lang.String" itemvalue="cmd2" />
+            <item index="75" class="java.lang.String" itemvalue="tokenizers" />
+            <item index="76" class="java.lang.String" itemvalue="pyperclip" />
+            <item index="77" class="java.lang.String" itemvalue="sacremoses" />
+            <item index="78" class="java.lang.String" itemvalue="tifffile" />
+            <item index="79" class="java.lang.String" itemvalue="pyglet" />
+            <item index="80" class="java.lang.String" itemvalue="stable-baselines3" />
+            <item index="81" class="java.lang.String" itemvalue="typing-extensions" />
+            <item index="82" class="java.lang.String" itemvalue="click" />
+            <item index="83" class="java.lang.String" itemvalue="attrs" />
+            <item index="84" class="java.lang.String" itemvalue="prettytable" />
+            <item index="85" class="java.lang.String" itemvalue="regex" />
+            <item index="86" class="java.lang.String" itemvalue="imageio" />
+            <item index="87" class="java.lang.String" itemvalue="PySocks" />
+            <item index="88" class="java.lang.String" itemvalue="Keras" />
+            <item index="89" class="java.lang.String" itemvalue="GPUtil" />
+            <item index="90" class="java.lang.String" itemvalue="Mako" />
+            <item index="91" class="java.lang.String" itemvalue="mkl-service" />
+            <item index="92" class="java.lang.String" itemvalue="cramjam" />
+            <item index="93" class="java.lang.String" itemvalue="scikit-image" />
+            <item index="94" class="java.lang.String" itemvalue="alembic" />
+            <item index="95" class="java.lang.String" itemvalue="cliff" />
+            <item index="96" class="java.lang.String" itemvalue="SQLAlchemy" />
+            <item index="97" class="java.lang.String" itemvalue="dgl" />
+            <item index="98" class="java.lang.String" itemvalue="wcwidth" />
+            <item index="99" class="java.lang.String" itemvalue="python-editor" />
+            <item index="100" class="java.lang.String" itemvalue="mkl-fft" />
+            <item index="101" class="java.lang.String" itemvalue="gdown" />
+            <item index="102" class="java.lang.String" itemvalue="seaborn" />
+            <item index="103" class="java.lang.String" itemvalue="julia" />
+            <item index="104" class="java.lang.String" itemvalue="sb3-contrib" />
+            <item index="105" class="java.lang.String" itemvalue="thrift" />
+            <item index="106" class="java.lang.String" itemvalue="google-auth-oauthlib" />
+            <item index="107" class="java.lang.String" itemvalue="dill" />
+            <item index="108" class="java.lang.String" itemvalue="packaging" />
+            <item index="109" class="java.lang.String" itemvalue="fastparquet" />
+            <item index="110" class="java.lang.String" itemvalue="colorama" />
+            <item index="111" class="java.lang.String" itemvalue="pillow" />
+            <item index="112" class="java.lang.String" itemvalue="google-auth" />
+            <item index="113" class="java.lang.String" itemvalue="dgl_cu100" />
+            <item index="114" class="java.lang.String" itemvalue="cogdl" />
+            <item index="115" class="java.lang.String" itemvalue="tabulate" />
+            <item index="116" class="java.lang.String" itemvalue="scikit_learn" />
+            <item index="117" class="java.lang.String" itemvalue="ogb" />
+            <item index="118" class="java.lang.String" itemvalue="optuna" />
+            <item index="119" class="java.lang.String" itemvalue="pyyaml" />
+            <item index="120" class="java.lang.String" itemvalue="torch-spline-conv" />
           </list>
         </value>
       </option>

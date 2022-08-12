@@ -349,9 +349,8 @@ class GCN_mgaev2(torch.nn.Module):
 
 class SAGE_mgaev2(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, num_layers,
-                 dropout, decoder_mask='nmask',  num_nodes=1000):
+                 dropout):
         super(SAGE_mgaev2, self).__init__()
-        self.decoder_mask = decoder_mask
         self.convs = torch.nn.ModuleList()
         self.convs.append(SAGEConv(in_channels, hidden_channels))
         for _ in range(num_layers - 2):
@@ -594,9 +593,8 @@ class GIN_mgaev33(torch.nn.Module):
 
 class GCN_mgaev3(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, num_layers,
-                 dropout, decoder_mask='nmask', num_nodes=1000):
+                 dropout):
         super(GCN_mgaev3, self).__init__()
-        self.decoder_mask = decoder_mask
 
         self.convs = torch.nn.ModuleList()
         self.convs.append(GCNConv(in_channels, hidden_channels, cached=False, add_self_loops=False))
@@ -610,15 +608,6 @@ class GCN_mgaev3(torch.nn.Module):
     def reset_parameters(self):
         for conv in self.convs:
             conv.reset_parameters()
-
-    def mask_decode(self, x):
-        x = torch.cat([self.n_emb.weight, x], dim=-1)
-        for lin in self.mask_lins[:-1]:
-            x = lin(x)
-            x = F.relu(x)
-            x = F.dropout(x, p=self.dropout, training=self.training)
-        x = self.mask_lins[-1](x)
-        return x
 
     def forward(self, x, adj_t):
         xx = []
@@ -640,19 +629,6 @@ class GCN_mgaev3(torch.nn.Module):
             xx.append(x)
         x = self.convs[-1](x, adj_t)
         xx.append(x)
-        x = torch.cat(xx, dim=1)
-        return x
-
-    def generate_emb(self, x, adj_t):
-        xx = []
-        for conv in self.convs[:-1]:
-            x = conv(x, adj_t)
-            x = F.relu(x)
-            xx.append(x)
-        x = self.convs[-1](x, adj_t)
-        xx.append(x)
-        if self.decoder_mask == 'mask':
-           x = self.mask_decode(x)
         x = torch.cat(xx, dim=1)
         return x
 
@@ -791,7 +767,7 @@ class LinkPredictor(torch.nn.Module):
 
 class LPDecoder(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, encoder_layer, num_layers,
-                 dropout, de_v='v2'):
+                 dropout, de_v='v1'):
         super(LPDecoder, self).__init__()
         n_layer = encoder_layer * encoder_layer
         self.lins = torch.nn.ModuleList()
@@ -830,6 +806,80 @@ class LPDecoder(torch.nn.Module):
             x = F.relu(x)
             x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.lins[-1](x)
+        return torch.sigmoid(x)
+
+
+class LPDecoderAbs(torch.nn.Module):
+    def __init__(self, in_channels, hidden_channels, out_channels, encoder_layer, num_layers,
+                 dropout, abs_num=1, de_v='v1'):
+        super(LPDecoderAbs, self).__init__()
+        n_layer = encoder_layer * encoder_layer
+        self.abs_num = abs_num
+        self.lins = torch.nn.ModuleList()
+        if abs_num == 1:
+            self.lins.append(torch.nn.Linear(in_channels * encoder_layer, hidden_channels))
+            for _ in range(num_layers - 2):
+                self.lins.append(torch.nn.Linear(hidden_channels, hidden_channels))
+            self.lins.append(torch.nn.Linear(hidden_channels, out_channels))
+        elif abs_num == 2:
+            self.lins.append(torch.nn.Linear(in_channels, hidden_channels))
+            for _ in range(num_layers - 2):
+                self.lins.append(torch.nn.Linear(hidden_channels, hidden_channels))
+            self.lins.append(torch.nn.Linear(hidden_channels, out_channels))
+        else:
+
+            self.lins.append(GCNConv(in_channels * encoder_layer, hidden_channels, cached=False, add_self_loops=False))
+            for _ in range(num_layers - 2):
+                self.lins.append(
+                    GCNConv(hidden_channels, hidden_channels, cached=False, add_self_loops=False))
+            self.lins.append(GCNConv(hidden_channels, hidden_channels, cached=False, add_self_loops=False))
+
+        self.dropout = dropout
+
+    def reset_parameters(self):
+        for lin in self.lins:
+            lin.reset_parameters()
+
+    def cross_layer(self, x_1, x_2):
+        bi_layer = []
+        for i in range(len(x_1)):
+            xi = x_1[i]
+            for j in range(len(x_2)):
+                xj = x_2[j]
+                bi_layer.append(torch.mul(xi, xj))
+        bi_layer = torch.cat(bi_layer, dim=1)
+        return bi_layer
+
+    def forward(self, h, edge, adj_t=None):
+        src_x = [h[i][edge[0]] for i in range(len(h))]
+        dst_x = [h[i][edge[1]] for i in range(len(h))]
+        if self.abs_num == 1:
+            src_x = torch.cat(src_x, dim=-1)
+            dst_x = torch.cat(dst_x, dim=-1)
+            x = src_x * dst_x
+        elif self.abs_num == 2:
+            src_x = src_x[-1]
+            dst_x = dst_x[-1]
+            x = src_x * dst_x
+        else:
+            x = torch.cat(h, dim=-1)
+
+        if self.abs_num == 3:
+            for lin in self.lins[:-1]:
+                x = lin(x, adj_t)
+                x = F.relu(x)
+                x = F.dropout(x, p=self.dropout, training=self.training)
+            x = self.lins[-1](x, adj_t)
+            src_x = x[edge[0]]
+            dst_x = x[edge[1]]
+            x = (src_x * dst_x).sum(dim=-1)
+        else:
+            for lin in self.lins[:-1]:
+                x = lin(x)
+                x = F.relu(x)
+                x = F.dropout(x, p=self.dropout, training=self.training)
+            x = self.lins[-1](x)
+
         return torch.sigmoid(x)
 
 

@@ -1,6 +1,6 @@
-# MGAE
+# S2GAE: Self-Supervised Graph Autoencoder
 
-This is a pytorch and pytorch-geometric based implementation of **Mased Graph Autoencoder: 70% Edges Could Be Reduandant for Graph Learning**. 
+This is a pytorch and pytorch-geometric based implementation of **S2GAE: Self-Supervised Graph Autoencoders Are Generalizable Learners with Graph Masking**. 
 
 ## Installation
 
@@ -14,5 +14,5 @@ The datasets used in our paper can be automatically downlowad.
 ## Quick Start
 Train on the Planetoid datasets (Cora, CiteSeer, and Pubmed):
 ```
-python mgae_main_planetoid.py --dataset "Cora" 
+python s2gae_small_lp.py --dataset "Cora" 
 ```
