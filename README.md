@@ -6,7 +6,6 @@ This is a pytorch and pytorch-geometric based implementation of **S2GAE: Self-Su
 
 The required packages can be installed by running `pip install -r requirements.txt`.
 
-## Masked Graph Autoencoders
 
 ## Datasets
 The datasets used in our paper can be automatically downlowad. 
