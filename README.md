@@ -6,7 +6,7 @@
 
 <h1> S2GAE: Self-Supervised Graph Autoencoder </h1>
 
-This is the PyG implementation for WSDM'23 paper: [S2GAE: Self-Supervised Graph Autoencoders Are Generalizable Learners with Graph Masking]
+This is the PyG implementation for WSDM'23 paper: [S2GAE: Self-Supervised Graph Autoencoders Are Generalizable Learners with Graph Masking](https://arxiv.org/pdf/2201.02534.pdf)
 
 S2GAE is a generalized self-supervised graph representation learning method, which achieves competitive or better performance than existing state-of-the-art methods on different types of tasks including *node classification*, *link prediction*, *graph classification*, and *molecular property prediction*.
 
