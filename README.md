@@ -39,7 +39,7 @@ Node classification (Accuracy, %)
 
 Transfer learning on molecular property prediction (ROC-AUC, %): 
 
-|                    | Cora         | CiteSeer         | PubMed         | A-Compute      | A-Photo        | Coauthor-CS    | Coauthor-Physics| ogbn-arxiv     | ogbn-proteins|
+|                    | Cora         | CiteSeer         | PubMed         | A-Compute      | A-Photo        | Coauthor-CS    | Coauthor-Physics| Ogbn-arxiv     | Ogbn-proteins|
 | ------------------ | ------------ | ------------     | ------------   | ------------   | ------------   | ------------   | ------------    | ------------   | -------- |
 | MVGRL              | 85.86±0.15     | 73.18±0.22     | 84.86±0.31     | 88.70±0.24     | 92.15±0.20     | 92.87±0.13     | 95.35±0.08      | 68.33±0.31     | -     |
 | BGRL               | 86.16±0.20     | 73.96±0.14     | 86.42±0.18     | 90.48±0.10     | 93.22±0.15     | 93.35±0.06     | **96.16±0.09**  | 71.77±0.19     | _     |
