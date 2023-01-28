@@ -1,5 +1,5 @@
 <p>
-	<img src="imgs/s2gae_figure_wsdm.pdf" width="1000">
+	<img src="imgs/s2gae_figure_wsdm" width="1000">
 	<br />
 
 </p>
