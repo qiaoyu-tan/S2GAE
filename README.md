@@ -2,7 +2,7 @@
 	<img src="imgs/s2gae_figure_wsdm.pdf" width="1000">
 	<br />
 
-</p>>
+</p>
 
 <h1> S2GAE: Self-Supervised Graph Autoencoder </h1>
 
@@ -10,13 +10,13 @@ This is the PyG implementation for WSDM'23 paper: [S2GAE: Self-Supervised Graph 
 
 S2GAE is a generalized self-supervised graph representation learning method, which achieves competitive or better performance than existing state-of-the-art methods on different types of tasks including *node classification*, *link prediction*, *graph classification*, and *molecular property prediction*.
 
-<h2>Installation</h2>>
+<h2>Installation</h2>
 
 The required packages can be installed by running `pip install -r requirements.txt`.
-<h2>Datasets</h2>> 
+<h2>Datasets</h2>
 The datasets used in our paper can be automatically downlowad. 
 
-<h2>Quick Start</h2>> 
+<h2>Quick Start</h2>
 For quick start, you could try:
 
 **Node classification** (Cora, CiteSeer, and PubMed)
@@ -33,7 +33,7 @@ python s2gae_large_lp.py --dataset "ogbl-ddi"
 **Graph classification**
 
 
-<h2> Experimental Results</h2>>
+<h2> Experimental Results</h2>
 
 Node classification (Accuracy, %)
 
@@ -69,7 +69,7 @@ Graph classification (Accuracy, %)
 | **S2GAE(ours)**    | **75.76±0.62** | **51.79±0.36** | **76.37±0.43** | **81.02±0.53** | 88.26±0.76     | 87.83±0.27     | **80.80±0.24** |
 
 
-<h1>Citing</h1>>
+<h1>Citing</h1>
 
 If you find this work is helpful to your research, please consider citing our paper:
 
