@@ -37,8 +37,6 @@ python s2gae_large_lp.py --dataset "ogbl-ddi"
 
 Node classification (Accuracy, %)
 
-Transfer learning on molecular property prediction (ROC-AUC, %): 
-
 |                    | Cora         | CiteSeer         | PubMed         | A-Compute      | A-Photo        | Coauthor-CS    | Coauthor-Physics| Ogbn-arxiv     | Ogbn-proteins|
 | ------------------ | ------------ | ------------     | ------------   | ------------   | ------------   | ------------   | ------------    | ------------   | -------- |
 | MVGRL              | 85.86±0.15     | 73.18±0.22     | 84.86±0.31     | 88.70±0.24     | 92.15±0.20     | 92.87±0.13     | 95.35±0.08      | 68.33±0.31     | -     |
